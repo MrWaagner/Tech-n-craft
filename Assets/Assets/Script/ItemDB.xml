@@ -1,0 +1,21 @@
+﻿<Item>
+  <item>
+    <name>pickaxe</name>
+    <itemID>1</itemID>
+    <itemType>TOOL</itemType>
+    <type>PICKAXE</type>
+    <durability>120</durability>
+    <statModifier>10</statModifier>
+    <comp>2</comp>
+    <comp>1</comp>
+    <comp>1</comp>
+    <comp>3</comp>
+  </item>
+  <item>
+    <name>Leather Boot</name>
+    <itemID>2</itemID>
+    <itemType>GEAR</itemType>
+    <type>BOOT</type>
+    <statModifier>10</statModifier>
+  </item>
+</Item>

@@ -1,0 +1,3 @@
+pickaxe=iron+wood
+axe=iron+wood
+superpick=pickaxe+axe
