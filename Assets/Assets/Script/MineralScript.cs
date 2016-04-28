@@ -3,15 +3,11 @@ using System.Collections;
 
 public class MineralScript : MonoBehaviour {
     
-    private string _loot;
+    private string _loot { get; set; }
 
-    public string GetLoot()
-    {
-        return _loot;
-    }
     public Class.Mineral Mine()
     {
-        return new Class.Mineral(GetLoot(), Random.Range(12, 14));
+        return new Class.Mineral(_loot, Random.Range(12, 14));
     }
 
     // Use this for initialization

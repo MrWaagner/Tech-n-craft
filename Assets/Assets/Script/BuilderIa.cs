@@ -4,6 +4,12 @@ using System.Collections.Generic;
 
 /*
 ################################
+#           KESAKO ?           #
+################################
+Ce Script est insérer sur les 
+builder. Il gère toutes les actions
+liées à ces derniers
+################################
 #          A FAIRE             #
 ################################
 - 
@@ -11,112 +17,73 @@ using System.Collections.Generic;
 public class BuilderIa : MonoBehaviour
 {
     private GameObject _chest;
-    public Class.inventory Inventory;
-    private GameObject[] _mineralList;
-    private const float Distance = 0.75f;
-    //Craft.Craft.craftList craftList;
-    List<Craft.craft> _craftList;
-    public bool IsTargeted = false;
-    private string _mining;
-    private int _idMineral;
+    public Class.inventory Inventory { get; set; }
+    private GameObject[] _ressourceList; //tableau des différentes ressources présentes
+    private const float Distance = 0.75f; //la distance des "pas" parcourut par le builder
+    public string _mining { get; set; } //La ressource en train d'être récolter par le builder
+    private int _ressourceID = 0; //L'ID de la ressource en train d'être récolter par le builder
     private Items.tool pickSlot;
+    public float miningSpeed { get; set; }
 
-    public string GetMining()
-    {
-        return _mining;
-    }
-
-    // Use this for initialization
+    //normalement void Start(), cette fonction se lance au démarrage du jeu
+    //IEnumerator permet ici uniquement à délayer le démarrage du script builder
     IEnumerator Start()
     {
-        yield return new WaitForSeconds(1f);
-        _craftList = Craft.CraftList;
-        Init();
-        //craftList = Craft.Craft.crea
-        //StartCoroutine(GoMining(choosen()));
-    }
-    IEnumerator Test()
-    {
-        GameObject test = Choosen();
-        while (Vector3.Distance(transform.position, test.transform.position) >= Distance)
-        {
-            print(Vector3.Distance(transform.position, test.transform.position));
-            GoTo(test);
-            yield return new WaitForEndOfFrame();
-        }
-    }
-
-    private GameObject Choosen()
-    {
-        GameObject choosen;
-        return choosen = _mineralList[Random.Range(0, _mineralList.Length)];
+        yield return new WaitForSeconds(1f); //le démarrage du script des builders se fait 1sec après le lancement du jeu
+        Init(); //On initialise quelques valeurs au démarrage
     }
 
     void Init()
     {
-        Inventory = new Class.inventory(40);
-        _chest = GameObject.Find("Chest");
-        _mineralList = GameObject.FindGameObjectsWithTag("Mineral");
+        Inventory = new Class.inventory(40); //on initialise l'inventaire
+        _chest = GameObject.Find("Chest"); //On repère la position du coffre
+        _ressourceList = GameObject.FindGameObjectsWithTag("Mineral"); //On insère toutes les ressources dans la liste
+        miningSpeed = 1f;
     }
-    // Update is called once per frame
-    void Update() { }
+    //La fonction act lance le builder au mining ou au stockage
     private void Act()
     {
-        StartCoroutine(Inventory.Full != true ? GoMining(_mineralList[_idMineral]) : GoStock());
+        //si l'inventaire n'est pas plein -> Récolte les ressources / sinon -> stock les ressources récoltés
+        StartCoroutine(Inventory.Full != true ? GoMining(_ressourceList[_ressourceID]) : GoStock());
     }
-
-    private void Act(GameObject choosen)
-    {
-        StartCoroutine(Inventory.Full != true ? GoMining(choosen) : GoStock());
-    }
-
+    //fonction permettant le changement de ressource récolté
     public void ChangeMining()
     {
-        if (_mining != null)
+        if (_ressourceID < _ressourceList.Length - 1) //si l'id de la ressource fait partie de la liste et est inférieur au dernier présent
         {
-            if (_idMineral < _mineralList.Length - 1)
-            {
-                StopAllCoroutines();
-                _idMineral++;
-                _mining = _mineralList[_idMineral].transform.name;
-                Act(_mineralList[_idMineral]);
-            }
-            else if (_idMineral == _mineralList.Length - 1)
-            {
-                StopAllCoroutines();
-                _idMineral = 0;
-                _mining = _mineralList[_idMineral].transform.name;
-                Act(_mineralList[_idMineral]);
-            }
+            StopAllCoroutines(); //On arrete la tache actuelle
+            _ressourceID++; //On incrémente pour cibler la prochaine ressource
+            _mining = _ressourceList[_ressourceID].transform.name; //On insère le nom de la ressource dans mining
+            Act(); //On appelle Act() pour mettre le builder au boulot
         }
-        else
+        else if (_ressourceID == _ressourceList.Length - 1) //si la ressource actuelle est la dernière de la liste
         {
             StopAllCoroutines();
-            _mining = _mineralList[_idMineral].transform.name;
-            Act(_mineralList[_idMineral]);
-        }
-    }
-    IEnumerator GoMining(GameObject minerais)
-    {
-        if (Inventory.Full != true)
-        {
-            while (Vector3.Distance(transform.position, minerais.transform.position) > 0.75f)
-            {
-                GoTo(minerais);
-                yield return new WaitForEndOfFrame();
-            }
-            //print("Je mine");
-            yield return new WaitForSeconds(1f);
-            Inventory.Add(minerais.GetComponent<MineralScript>().Mine());
-            StartCoroutine(GoMining(minerais));
-        }
-        else {
+            _ressourceID = 0; //on remet à 0 ressourceID pour revenir au début de la liste
+            _mining = _ressourceList[_ressourceID].transform.name;
             Act();
         }
     }
+    //Go mining va servir de "cerveau de travail"
+    //IEnumerator servira ici à maintenir la fonction en éxecution
+    IEnumerator GoMining(GameObject minerais)
+    {
+        //On déplace le builder jusqu'a la ressource désiré
+        while (Vector3.Distance(transform.position, minerais.transform.position) > Distance)
+        {
+            GoTo(minerais);
+            yield return new WaitForEndOfFrame();//A chaque fin de boucle, on attend la fin de la frame pour continuer la boucle
+        }
+        while (Inventory.Full != true) //Tant que le builder n'est pas full, on mine
+        {
+            yield return new WaitForSeconds(miningSpeed); //On attend le temps de récolte du builder
+            Inventory.Add(minerais.GetComponent<MineralScript>().Mine()); //on ajoute à l'inventaire les ressources minés
+        }
+        Act();
+    }
     private IEnumerator GoStock()
     {
-        while (Vector3.Distance(transform.position, _chest.transform.position) > 0.75f)
+        while (Vector3.Distance(transform.position, _chest.transform.position) > Distance)
         {
             GoTo(_chest);
             yield return new WaitForEndOfFrame();
@@ -131,20 +98,7 @@ public class BuilderIa : MonoBehaviour
     }
     private void GoTo(GameObject target)
     {
-        var targetPos = new Vector3(target.transform.position.x, 0.75f, target.transform.position.z);
+        var targetPos = new Vector3(target.transform.position.x, Distance, target.transform.position.z);
         transform.position = Vector3.MoveTowards(transform.position, targetPos, 1.5f * Time.deltaTime);
-    }
-    private Craft.craft ChooseCraft()
-    {
-        return _craftList[Random.Range(0, _craftList.Count - 1)];
-    }
-    public void craft(Items item)
-    {
-        GoTo(_chest);
-
-    }
-    bool canCraft(Items item)
-    {
-        return false;
     }
 }

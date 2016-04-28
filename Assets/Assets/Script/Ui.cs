@@ -92,7 +92,7 @@ public class Ui : MonoBehaviour {
     {
         //Display change mining menu
         GUI.Box(new Rect(10, Screen.height - 60, 100, 50), "mine");
-        if (GUI.Button(new Rect(20, Screen.height - 40, 80, 20), _mm.SelectedObject.GetComponent<BuilderIa>().GetMining()))
+        if (GUI.Button(new Rect(20, Screen.height - 40, 80, 20), _mm.SelectedObject.GetComponent<BuilderIa>()._mining))
         {
             _mm.SelectedObject.GetComponent<BuilderIa>().ChangeMining();
         }
