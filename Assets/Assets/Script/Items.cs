@@ -15,8 +15,6 @@ public class Items : MonoBehaviour
     public class baseItem
     {
         public string name { get; set; }
-        //private int damage { get; set; }
-        //private Compo compo { get; set; }
         public int itemID { get; set; }
         public Dictionary<int, int> compo; //compo ID, nbr
         public enum ItemTypes

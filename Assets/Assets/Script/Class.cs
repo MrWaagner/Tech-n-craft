@@ -3,10 +3,24 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+/*
+################################
+#           KESAKO ?           #
+################################
+
+################################
+#          A FAIRE             #
+################################
+- Modifier la classe inventaire
+et tout les autres qui y touche
+pour quelle stock désormais
+des baseItems et pas des "minerais"
+*/
+
 namespace Class {
     public class Mineral
     {
-        public new string Name;
+        public string Name;
         public int Nbr;
         public Mineral(string name, int nbr)
         {
@@ -14,22 +28,12 @@ namespace Class {
             this.Nbr = nbr;
         }
     }
-    public class Mineable : MonoBehaviour
-    {
-        public string Loot;
-        public string Name;
-        public Mineable(string Loot, string Name)
-        {
-            this.Loot = Loot;
-            this.Name = Name;
-        }
-    }
     public class inventory
     {
         public int Contient; //nombre total d'objet présent
         public int Diff; //nombre d'objet différent
         public bool Full;
-        private int _maxInv;
+        private readonly int _maxInv;
         public List<Mineral> Inventory;
         public inventory(int MaxInv)
         {

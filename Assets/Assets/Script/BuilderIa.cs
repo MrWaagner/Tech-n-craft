@@ -24,6 +24,7 @@ public class BuilderIa : MonoBehaviour
     private int _ressourceID = 0; //L'ID de la ressource en train d'être récolter par le builder
     private Items.tool pickSlot;
     public float miningSpeed { get; set; }
+    private bool isMoving;
 
     //normalement void Start(), cette fonction se lance au démarrage du jeu
     //IEnumerator permet ici uniquement à délayer le démarrage du script builder
@@ -40,12 +41,14 @@ public class BuilderIa : MonoBehaviour
         _ressourceList = GameObject.FindGameObjectsWithTag("Mineral"); //On insère toutes les ressources dans la liste
         miningSpeed = 1f;
     }
-    //La fonction act lance le builder au mining ou au stockage
+
+    //La fonction act lance le builder à la récolte ou au stockage
     private void Act()
     {
         //si l'inventaire n'est pas plein -> Récolte les ressources / sinon -> stock les ressources récoltés
         StartCoroutine(Inventory.Full != true ? GoMining(_ressourceList[_ressourceID]) : GoStock());
     }
+
     //fonction permettant le changement de ressource récolté
     public void ChangeMining()
     {
@@ -64,41 +67,44 @@ public class BuilderIa : MonoBehaviour
             Act();
         }
     }
+
     //Go mining va servir de "cerveau de travail"
-    //IEnumerator servira ici à maintenir la fonction en éxecution
+    //IEnumerator servira ici à maintenir la fonction à travers les fps
     IEnumerator GoMining(GameObject minerais)
     {
-        //On déplace le builder jusqu'a la ressource désiré
-        while (Vector3.Distance(transform.position, minerais.transform.position) > Distance)
-        {
-            GoTo(minerais);
-            yield return new WaitForEndOfFrame();//A chaque fin de boucle, on attend la fin de la frame pour continuer la boucle
-        }
+        StartCoroutine(GoTo(minerais));
+        while (isMoving) { yield return new WaitForEndOfFrame(); }
         while (Inventory.Full != true) //Tant que le builder n'est pas full, on mine
         {
             yield return new WaitForSeconds(miningSpeed); //On attend le temps de récolte du builder
             Inventory.Add(minerais.GetComponent<MineralScript>().Mine()); //on ajoute à l'inventaire les ressources minés
         }
-        Act();
+        Act(); //si l'on sort des deux whiles alors le builder est full et reprend depuis Act()
     }
+
+    //Fonction de base pour allez stocker les ressources dans le coffre
     private IEnumerator GoStock()
     {
-        while (Vector3.Distance(transform.position, _chest.transform.position) > Distance)
+        StartCoroutine(GoTo(_chest));
+        while (isMoving) { yield return new WaitForEndOfFrame(); }
+        for (var i = 0; i < Inventory.Diff; i++) //Pour tout les images différents,
         {
-            GoTo(_chest);
+            _chest.GetComponent<ChestScript>().Inventory.Add(Inventory.Inventory[i]); //on les stock dans le coffre
             yield return new WaitForEndOfFrame();
         }
-        for (var i = 0; i < Inventory.Diff; i++)
-        {
-            _chest.GetComponent<ChestScript>().Inventory.Add(Inventory.Inventory[i]);
-        }
-        Inventory.ClearInv();
-        Act();
-        yield return new WaitForEndOfFrame();
+        Inventory.ClearInv(); //On nettoie l'inventaire
+        Act(); //Et on reprend depuis le début
     }
-    private void GoTo(GameObject target)
+
+    private IEnumerator GoTo(GameObject target) //La fonction de base pour le déplacement
     {
-        var targetPos = new Vector3(target.transform.position.x, Distance, target.transform.position.z);
-        transform.position = Vector3.MoveTowards(transform.position, targetPos, 1.5f * Time.deltaTime);
+        isMoving = true;
+        var targetPos = new Vector3(target.transform.position.x, 0.75f, target.transform.position.z); //On set la position de la destination
+        while (Vector3.Distance(transform.position, targetPos) > Distance)
+        {
+            transform.position = Vector3.MoveTowards(transform.position, targetPos, 1.5f*Time.deltaTime);
+            yield return new WaitForEndOfFrame();
+        }
+        isMoving = false;
     }
 }
